@@ -1,1 +1,56 @@
+import cv2
+from ultralytics import YOLO
+import cvzone
+import numpy as np
+
+# === Charger les modèles YOLO ===
+model1 = YOLO("model2char.pt")
+model2 = YOLO("model1.pt")
+
+class_names_model1 = {0: 'char', 1: 'char', 2: 'char', 3: 'char'}
+class_names_model2 = {0: 'char', 1: 'Jeep', 2: 'Lance-roquettes multiple', 3: 'Camion', 4: 'Lance missile'}
+
+def get_model_score(model, frame, custom_names):
+    results = model(frame)
+    if not results or results[0].boxes is None:
+        return 0, []
+    boxes = results[0].boxes.xyxy.cpu().numpy().astype(int).tolist()
+    class_ids = results[0].boxes.cls.cpu().numpy().astype(int).tolist()
+    confidences = results[0].boxes.conf.cpu().numpy().tolist()
+    total_confidence = sum(conf for conf in confidences if conf >= 0.86)
+    detections = [
+        (box, class_id, conf, custom_names.get(class_id, f"Class {class_id}"))
+        for box, class_id, conf in zip(boxes, class_ids, confidences)
+        if conf >= 0.86
+    ]
+    return total_confidence, detections
+
+# === Charger une vidéo ou webcam ===
+video_path = "video.mp4"  # Remplace avec le chemin réel ou mets 0 pour webcam
+cap = cv2.VideoCapture(video_path)  # cap = cv2.VideoCapture(0) pour webcam
+
+while True:
+    success, frame = cap.read()
+    if not success:
+        break
+
+    frame = cv2.resize(frame, (640, 480))
+    score1, detections1 = get_model_score(model1, frame, class_names_model1)
+    score2, detections2 = get_model_score(model2, frame, class_names_model2)
+    best_detections = detections1 if score1 >= score2 else detections2
+
+    if best_detections:
+        for box, class_id, conf, class_name in best_detections:
+            x1, y1, x2, y2 = box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cvzone.putTextRect(frame, f"{class_name}: {conf:.2f}", (x1, max(y1 - 10, 10)), scale=1, thickness=1)
+    else:
+        cvzone.putTextRect(frame, "No vehicle detected", (10, 30), scale=1, thickness=2, colorR=(0, 0, 255))
+
+    cv2.imshow("Detection Video", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
 
