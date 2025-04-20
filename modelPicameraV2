@@ -1,1 +1,91 @@
+import cv2 
+from ultralytics import YOLO 
+import cvzone 
+import numpy as np 
+from picamera2 import Picamera2 
+import time
+import RPi.GPIO as GPIO  # For GPIO control
+
+# === GPIO SETUP ===
+BUZZER_PIN = 26  # You can change this to any GPIO pin you prefer
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BUZZER_PIN, GPIO.OUT)
+GPIO.output(BUZZER_PIN, GPIO.LOW)  # Start with buzzer off
+
+# Load both YOLO models 
+model1 = YOLO("model2char.pt") 
+model2 = YOLO("model1.pt") 
+ 
+class_names_model1 = {0: 'char', 1: 'char', 2: 'char', 3: 'char'} 
+class_names_model2 = {0: 'char', 1: 'Jeep', 2: 'Lance-roquettes multiple', 3: 'Camion', 4: 'Lance missile'} 
+ 
+# Initialize PiCamera2 
+picam2 = Picamera2() 
+picam2.preview_configuration.main.size = (320, 240)  
+picam2.preview_configuration.main.format = "RGB888"  
+picam2.configure("preview")  
+picam2.start()  
+time.sleep(2)
+
+def get_model_score(model, frame, custom_names): 
+    results = model(frame)  
+    if not results or results[0].boxes is None: 
+        return 0, []  
+    boxes = results[0].boxes.xyxy.cpu().numpy().astype(int).tolist()  
+    class_ids = results[0].boxes.cls.cpu().numpy().astype(int).tolist()  
+    confidences = results[0].boxes.conf.cpu().numpy().tolist()  
+    total_confidence = sum(conf for conf in confidences if conf >= 0.86)  
+    detections = [ 
+        (box, class_id, conf, custom_names.get(class_id, f"Class {class_id}")) 
+        for box, class_id, conf in zip(boxes, class_ids, confidences) 
+        if conf >= 0.86
+    ] 
+    return total_confidence, detections 
+ 
+count = 0
+
+try:
+    while True: 
+        frame = picam2.capture_array()
+        count += 1
+        if count % 3 != 0:
+            continue
+            
+        frame = cv2.resize(frame, (640, 480))
+        score1, detections1 = get_model_score(model1, frame, class_names_model1) 
+        score2, detections2 = get_model_score(model2, frame, class_names_model2)
+        best_detections = detections1 if score1 >= score2 else detections2 
+
+        vehicle_detected = False  # Flag to control buzzer
+
+        if best_detections:
+            vehicle_detected = True
+            for box, class_id, conf, class_name in best_detections:
+                x1, y1, x2, y2 = box
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                text_pos = (x1, max(y1 - 10, 10))
+                cvzone.putTextRect(frame, f"{class_name}: {conf:.2f}", text_pos, scale=1, thickness=1)
+                GPIO.output(BUZZER_PIN, GPIO.HIGH)
+                time.sleep(1)
+                GPIO.output(BUZZER_PIN, GPIO.LOW)    
+        else:
+            cvzone.putTextRect(frame, "No vehicle detected", (10, 30), scale=1, thickness=2, colorR=(0, 0, 255))
+            GPIO.output(BUZZER_PIN, GPIO.LOW)
+
+       
+
+        # Display the image 
+        cv2.imshow("Model Detection", frame) 
+        if cv2.waitKey(1) & 0xFF == ord('q'): 
+            break 
+
+except KeyboardInterrupt:
+    print("Stopped by user")
+
+finally:
+    # Cleanup
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
+    GPIO.cleanup()
+    cv2.destroyAllWindows() 
+    picam2.stop()
 
