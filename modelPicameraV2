@@ -18,8 +18,7 @@ model2 = YOLO("model1.pt")
  
 class_names_model1 = {0: 'char', 1: 'char', 2: 'char', 3: 'char'} 
 class_names_model2 = {0: 'char', 1: 'Jeep', 2: 'Lance-roquettes multiple', 3: 'Camion', 4: 'Lance missile'} 
- 
- 
+  
 # Initialize PiCamera2 
 picam2 = Picamera2() 
 picam2.preview_configuration.main.size = (320, 240)  
