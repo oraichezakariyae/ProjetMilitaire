@@ -24,7 +24,7 @@ def get_model_score(model, frame, custom_names):
         if conf >= 0.86
     ]
     return total_confidence, detections
-   
+    
 # === Charger une vidéo ou webcam === 
 video_path = "video.mp4"  # Remplace avec le chemin réel ou mets 0 pour webcam
 cap = cv2.VideoCapture(video_path)  # cap = cv2.VideoCapture(0) pour webcam
