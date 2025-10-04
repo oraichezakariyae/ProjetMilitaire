@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import cvzone
 import numpy as np 
 
-# === Charger les modèles YOLO ===
+# === Charger les modèles YOLO === 
 model1 = YOLO("model2char.pt")
 model2 = YOLO("model1.pt")
 
