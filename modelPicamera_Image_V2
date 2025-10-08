@@ -18,7 +18,7 @@ def get_model_score(model, frame, custom_names):
     class_ids = results[0].boxes.cls.cpu().numpy().astype(int).tolist()
     confidences = results[0].boxes.conf.cpu().numpy().tolist()
     total_confidence = sum(conf for conf in confidences if conf >= 0.86)
-    detections = [
+    detections = [ 
         (box, class_id, conf, custom_names.get(class_id, f"Class {class_id}"))
         for box, class_id, conf in zip(boxes, class_ids, confidences)
         if conf >= 0.86
