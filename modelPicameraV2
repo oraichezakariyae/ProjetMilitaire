@@ -11,7 +11,7 @@ BUZZER_PIN = 26  # You can change this to any GPIO pin you prefer
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUZZER_PIN, GPIO.OUT)
 GPIO.output(BUZZER_PIN, GPIO.LOW)  # Start with buzzer off
- 
+  
 # Load both YOLO models 
 model1 = YOLO("model2char.pt") 
 model2 = YOLO("model1.pt") 
