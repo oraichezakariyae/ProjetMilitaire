@@ -24,7 +24,7 @@ def get_model_score(model, frame, custom_names):
         if conf >= 0.86
     ] 
     return total_confidence, detections
-
+ 
 # === Charger une image ===
 image_path = "image.jpg"  # Remplace avec le chemin réel
 image = cv2.imread(image_path)
