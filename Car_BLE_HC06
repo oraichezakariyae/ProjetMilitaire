@@ -11,7 +11,7 @@
 #define TIMEOUT 1000  // 1000 ms = 1 seconde
  
 unsigned long lastCommandTime = 0;
-  
+   
 void setup() {
   Serial.begin(9600);
   pinMode(IN1, OUTPUT);
