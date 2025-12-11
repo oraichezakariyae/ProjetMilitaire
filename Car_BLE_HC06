@@ -10,7 +10,7 @@
 #define Speed 255
 #define TIMEOUT 1000  // 1000 ms = 1 seconde
  
-unsigned long lastCommandTime = 0;
+unsigned long lastCommandTime = 0; 
     
 void setup() {
   Serial.begin(9600);
