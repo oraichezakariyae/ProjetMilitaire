@@ -6,7 +6,7 @@ from picamera2 import Picamera2
 import time
 import RPi.GPIO as GPIO  # For GPIO control
                      
-# === GPIO SETUP ===
+# === GPIO SETUP === 
 BUZZER_PIN = 26  # You can change this to any GPIO pin you prefer
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUZZER_PIN, GPIO.OUT)
